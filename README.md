@@ -36,6 +36,21 @@ Trained regression model that uses TensorFlow (Keras) on the classic diabetes da
 
 ---
 
+### ☁️ AWS Integration
+
+This project uses several AWS services:
+
+- **Amazon S3** – to store trained model and scaler (`.h5`, `.pkl`)
+- **Amazon RDS** – to log API predictions with timestamps and metadata
+- **IAM** – to separate programmatic access (via environment)
+- **Optional (future)**: EC2, CloudWatch, ElastiCache, Secrets Manager
+
+Model and scaler are dynamically loaded from S3 with script.  
+All S3 uploads are managed by a dedicated upload script using `boto3`.
+
+---
+
+
 ### 📊 Visualizations & Analysis
 
 #### 1. Feature Importance
@@ -60,8 +75,3 @@ Visual comparison of predicted vs actual values on the test set:
 - There's noticeable spread in higher values (>200), indicating that the model struggles more in that range.
 - Outliers show some samples with significant prediction errors.
 - This is likely due to the **small dataset size (442 samples)**, which limits generalization capacity.
-
-
-
-
-
