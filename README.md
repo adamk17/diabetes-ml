@@ -15,7 +15,7 @@ This project showcases how to train a regression model, serve it as an API, and 
 - ✅ **PostgreSQL logging** of predictions for audit/monitoring
 - ✅ **Prometheus metrics** via /metrics
 - ✅ **Swagger UI** for interactive API docs
-- ✅ **Dockerized API** for reproducible deployment
+- ✅ **Docker + Docker Compose** support for local development and testing
 - ✅ **Terraform infrastructure** (EC2, RDS, IAM, S3) for AWS
 
 ---
@@ -56,6 +56,43 @@ The FastAPI server exposes the following endpoints:
 
 ---
 
+### 🐳 Local Development with Docker Compose
+
+To run the API and PostgreSQL locally using Docker:
+
+1. **Make sure** you have Docker and Docker Compose installed.
+2. **Create** a `.env.local` file inside the `api/` directory with all required environment variables.
+3. **Run** the following command from the project root:
+
+```bash
+docker-compose --env-file api/.env.local up --build
+```
+
+#### ✅ What it does:
+* Automatically downloads the model (`.h5`) and scaler (`.pkl`) from S3 during startup
+* Spins up a local PostgreSQL database container
+* Exposes:
+   * Prometheus metrics → http://localhost:8000/metrics
+   * Swagger UI → http://localhost:8000/docs
+
+To shut everything down:
+
+```bash
+docker-compose down
+```
+
+### 📂 Project Structure (simplified)
+* `api/app/` → main FastAPI application (config, routes, services, etc.)
+* `api/.env.local` → environment variables for local development (used by Docker)
+* `api/Dockerfile` → image definition for the FastAPI app
+* `api/upload_to_s3.py` → utility script to upload model artifacts to S3
+* `api/train_model.py` → one-time script to train and export the model
+* `docker-compose.yml` → local app + DB stack
+* `requirements.txt` → Python dependencies for the container
+* `trained_model/` → saved model, scaler, and training visualizations
+
+---
+
 ### ☁️ AWS Integration
 
 This project uses several AWS services:
@@ -68,8 +105,9 @@ This project uses several AWS services:
 Model and scaler are dynamically loaded from S3 with script.  
 All S3 uploads are managed by a dedicated upload script using `boto3`.
 
----
+Local setup does not require AWS RDS. By default, Docker Compose runs a local PostgreSQL instance.
 
+---
 
 ### 📊 Visualizations & Analysis
 
@@ -95,4 +133,3 @@ Visual comparison of predicted vs actual values on the test set:
 - There's noticeable spread in higher values (>200), indicating that the model struggles more in that range.
 - Outliers show some samples with significant prediction errors.
 - This is likely due to the **small dataset size (442 samples)**, which limits generalization capacity.
-
