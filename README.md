@@ -13,6 +13,8 @@ This project showcases how to train a regression model, serve it as an API, and 
 - ✅ **FastAPI REST API** for real-time predictions
 - ✅ **S3 model loading** in containerized app
 - ✅ **PostgreSQL logging** of predictions for audit/monitoring
+- ✅ **Prometheus metrics** via /metrics
+- ✅ **Swagger UI** for interactive API docs
 - ✅ **Dockerized API** for reproducible deployment
 - ✅ **Terraform infrastructure** (EC2, RDS, IAM, S3) for AWS
 
@@ -33,6 +35,24 @@ Trained regression model that uses TensorFlow (Keras) on the classic diabetes da
   - `tf_model.h5` – trained model
   - `scaler.pkl` – fitted scaler
   - Visualizations: feature importance, training history, prediction scatter
+
+---
+
+### ⚙️ API Overview
+
+The FastAPI server exposes the following endpoints:
+
+- `POST /predict`  
+  Takes 10 float features as input, returns prediction, timestamp, and unique request ID.
+
+- `GET /health`  
+  Checks whether model, scaler, and database connection are ready.
+
+- `GET /docs`  
+  Built-in interactive documentation via Swagger UI.
+
+- `GET /metrics`  
+  Exposes Prometheus-compatible metrics (latency, request count, etc).
 
 ---
 
@@ -75,3 +95,4 @@ Visual comparison of predicted vs actual values on the test set:
 - There's noticeable spread in higher values (>200), indicating that the model struggles more in that range.
 - Outliers show some samples with significant prediction errors.
 - This is likely due to the **small dataset size (442 samples)**, which limits generalization capacity.
+
