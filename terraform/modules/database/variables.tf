@@ -48,6 +48,10 @@ variable "security_group_id" {
 variable "publicly_accessible" {
   description = "Whether the RDS instance should be publicly accessible"
   type        = bool
-  default     = false
+  default     = true
 }
 
+variable "subnet_ids" {
+  description = "List of subnet IDs for RDS subnet group"
+  type        = list(string)
+}

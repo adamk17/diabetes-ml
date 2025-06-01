@@ -40,3 +40,4 @@ class Config:
         
         # API version
         self.version = os.getenv("API_VERSION", "1.0.0")
+        

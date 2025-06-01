@@ -1,4 +1,14 @@
-# RDS PostgreSQL instance
+resource "aws_db_subnet_group" "this" {
+  name       = "${var.project_name}-db-subnet-group"
+  subnet_ids = var.subnet_ids
+
+  tags = {
+    Name        = "${var.project_name}-db-subnet-group"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
 resource "aws_db_instance" "postgres" {
   identifier             = var.db_identifier
   engine                 = "postgres"
@@ -16,6 +26,8 @@ resource "aws_db_instance" "postgres" {
   publicly_accessible    = var.publicly_accessible
   backup_retention_period = var.environment == "production" ? 7 : 1
   multi_az               = var.environment == "production"
+  db_subnet_group_name = aws_db_subnet_group.this.name
+
 
   tags = {
     Name        = "${var.project_name}-database"

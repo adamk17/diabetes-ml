@@ -1,7 +1,8 @@
-variable "aws_region" {
-  description = "AWS region to deploy resources"
+# Global
+variable "project_name" {
+  description = "Name of the project"
   type        = string
-  default     = "eu-central-1"
+  default     = "diabetes-ml"
 }
 
 variable "environment" {
@@ -10,10 +11,50 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "project_name" {
-  description = "Name of the project"
+variable "aws_region" {
+  description = "AWS region to deploy resources"
   type        = string
-  default     = "diabetes-ml"
+  default     = "eu-central-1"
+}
+
+variable "additional_tags" {
+  description = "Map of additional tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+# VPC
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidrs" {
+  description = "List of public subnet CIDRs"
+  type        = list(string)
+}
+
+variable "private_subnet_cidrs" {
+  description = "List of private subnet CIDRs"
+  type        = list(string)
+}
+
+variable "availability_zones" {
+  description = "List of availability zones"
+  type        = list(string)
+}
+
+variable "create_nat_gateway" {
+  description = "Whether to create NAT Gateway"
+  type        = bool
+  default     = true
+}
+
+variable "allowed_cidr_blocks" {
+  description = "List of CIDR blocks allowed to access resources (e.g. RDS, Ingress)"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
 # S3
@@ -33,7 +74,6 @@ variable "aws_secret_access_key" {
   type        = string
   sensitive   = true
 }
-
 
 # RDS
 variable "db_identifier" {
@@ -72,25 +112,123 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to connect to RDS and SSH"
+# EKS
+variable "cluster_name" {
+  description = "EKS cluster name"
+  type        = string
+  default     = "diabetes-ml-cluster"
+}
+
+variable "cluster_version" {
+  description = "Kubernetes version for the cluster"
+  type        = string
+  default     = "1.29"
+}
+
+variable "endpoint_private_access" {
+  description = "Whether the Amazon EKS private API server endpoint is enabled"
+  type        = bool
+  default     = false
+}
+
+variable "endpoint_public_access" {
+  description = "Whether the Amazon EKS public API server endpoint is enabled"
+  type        = bool
+  default     = true
+}
+
+variable "cluster_security_group_ids" {
+  description = "List of security group IDs for EKS control plane"
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Change for production!
+  default     = []
 }
 
-# EC2
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t3.micro"
+variable "enabled_cluster_log_types" {
+  description = "List of control plane log types to enable"
+  type        = list(string)
+  default     = ["api", "audit", "authenticator"]
 }
 
-variable "key_name" {
-  description = "Name of your AWS key pair (for SSH access to EC2)"
+variable "node_instance_type" {
+  description = "EC2 instance type for the node group"
   type        = string
+  default     = "t3.medium"
 }
 
-variable "pem_base_path" {
-  description = "Base path to the .pem key (e.g., C:/Users/adamk/.ssh)"
+variable "desired_capacity" {
+  description = "Desired number of worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "min_size" {
+  description = "Minimum number of worker nodes"
+  type        = number
+  default     = 1
+}
+
+variable "max_size" {
+  description = "Maximum number of worker nodes"
+  type        = number
+  default     = 3
+}
+
+variable "ami_type" {
+  description = "AMI type for the node group"
   type        = string
+  default     = "AL2_x86_64"
+}
+
+variable "capacity_type" {
+  description = "Capacity type (ON_DEMAND or SPOT)"
+  type        = string
+  default     = "ON_DEMAND"
+}
+
+variable "disk_size" {
+  description = "Disk size in GiB for node group"
+  type        = number
+  default     = 20
+}
+
+variable "node_labels" {
+  description = "Labels to apply to nodes"
+  type        = map(string)
+  default     = {}
+}
+
+variable "node_taints" {
+  description = "Taints to apply to nodes"
+  type = list(object({
+    key    = string
+    value  = string
+    effect = string
+  }))
+  default = []
+}
+
+variable "update_max_unavailable" {
+  description = "Maximum number of nodes that can be unavailable during update"
+  type        = number
+  default     = 1
+}
+
+variable "additional_node_groups" {
+  description = "Optional list of additional node groups"
+  type = list(object({
+    name             = string
+    instance_types   = list(string)
+    desired_capacity = number
+    min_size         = number
+    max_size         = number
+    labels           = map(string)
+  }))
+  default = []
+}
+
+#ECR
+variable "ecr_repository_name" {
+  description = "Name of the ECR repository"
+  type        = string
+  default     = "diabetes-ml"
 }

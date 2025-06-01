@@ -1,6 +1,6 @@
 # 🩺 diabetes-ml
 
-A complete machine learning pipeline for predicting diabetes progression using FastAPI, TensorFlow (Keras), PostgreSQL, Docker, AWS (S3 + RDS), and Terraform.
+A complete machine learning pipeline for predicting diabetes progression using FastAPI, TensorFlow (Keras), PostgreSQL, Docker, Kubernetes, Helm, AWS (S3 + RDS), and Terraform.
 
 This project showcases how to train a regression model, serve it as an API, and deploy it with cloud infrastructure – all production-ready and containerized.
 
@@ -14,8 +14,8 @@ This project showcases how to train a regression model, serve it as an API, and 
 * ✅ **Prometheus metrics** via `/metrics`
 * ✅ **Swagger UI** for interactive API docs
 * ✅ **Docker + Docker Compose** for local development
-* ✅ **Terraform infrastructure** (EC2, RDS, IAM, S3) for AWS
-* ✅ **CloudWatch logging** from EC2 instance
+* ✅ **Terraform infrastructure** (EC2, RDS, IAM, S3, EKS, ECR) for AWS
+* ✅ **CloudWatch logging** from EC2 instance or Kubernetes
 
 ## 🧠 ML Training Pipeline
 
@@ -37,10 +37,10 @@ Trained regression model that uses TensorFlow (Keras) on the classic diabetes da
 
 The FastAPI server exposes the following endpoints:
 
-* `POST /predict` Takes 10 float features as input, returns prediction, timestamp, and unique request ID.
-* `GET /health` Checks whether model, scaler, and database connection are ready.
-* `GET /docs` Swagger UI for interactive documentation.
-* `GET /metrics` Exposes Prometheus-compatible metrics.
+* `POST /predict` - Takes 10 float features as input, returns prediction, timestamp, and unique request ID
+* `GET /health` - Checks whether model, scaler, and database connection are ready
+* `GET /docs` - Swagger UI for interactive documentation
+* `GET /metrics` - Exposes Prometheus-compatible metrics
 
 ## 🐳 Local Development with Docker Compose
 
@@ -67,48 +67,90 @@ To stop everything:
 docker-compose down
 ```
 
-## ☁️ AWS Infrastructure (Terraform)
+## ☁️ AWS Infrastructure with Terraform + EKS
 
-This project uses **Terraform** to provision and manage:
-* ✅ **EC2** instance to host the app (with Docker & SSH setup)
-* ✅ **RDS (PostgreSQL)** for centralized prediction logging
-* ✅ **IAM Roles & Policies** to manage access securely
-* ✅ **CloudWatch Logs** for EC2 app monitoring
-* ✅ **S3 (existing bucket)** for model & scaler storage
+The application can be fully deployed on Amazon EKS using Terraform and Helm – no manual Docker build/push required.
 
-The Terraform deployment:
-* Uses `user_data` to install Docker, clone app code, and launch the container
-* Attaches IAM roles so the EC2 can access S3 + CloudWatch
-* Uploads the app code with `null_resource` + PowerShell + SCP
+### 🧰 What gets provisioned:
+* ✅ EKS cluster with managed node group
+* ✅ ECR repository for Docker image
+* ✅ Docker image built and pushed automatically
+* ✅ Helm chart deployed with correct image from ECR
+* ✅ Ingress controller (nginx) automatically installed
+* ✅ LoadBalancer service exposes the app to the internet
+* ✅ RDS for persistent PostgreSQL backend
+* ✅ S3 integration for model loading
+* ✅ CloudWatch logging from Kubernetes
 
-You'll need:
-* A key pair (`diabetes-key`) in `C:/users/USER/.ssh/`
-* Valid AWS credentials (via environment or profile)
+### 🧪 How to deploy
+
+From the `terraform/` directory:
+
+```bash
+terraform init
+terraform apply
+```
+
+Terraform will:
+* Create infrastructure (EKS, RDS, ECR, etc.)
+* Build Docker image and push it to ECR
+* Deploy application to EKS via Helm
+* Return the Ingress hostname in the output
+
+Example output:
+
+```bash
+ingress_nginx_service_hostname = "a04a4461460b04ed1b12464acf8ab028-8356960.eu-central-1.elb.amazonaws.com"
+```
+
+### 🌐 How to test deployed app
+
+You can test your deployed app using:
+
+```bash
+curl http://a04a4461460b04ed1b12464acf8ab028-8356960.eu-central-1.elb.amazonaws.com/health
+```
+
+Or open it in your browser:
+
+```bash
+http://a04a4461460b04ed1b12464acf8ab028-8356960.eu-central-1.elb.amazonaws.com/docs
+```
+
+For local testing using hostname `diabetes-ml.local`, you can also edit your hosts file:
+
+```bash
+<external-lb-ip> diabetes-ml.local
+```
+
+To stop and delete everything:
+
+```bash
+terraform destroy
+```
 
 ## 📂 Project Structure (simplified)
-* `api/app/` → main FastAPI application (config, routes, services, etc.)
-* `api/.env.local` → environment variables for local development (used by Docker)
-* `api/Dockerfile` → image definition for the FastAPI app
-* `api/upload_to_s3.py` → utility script to upload model artifacts to S3
-* `api/train_model.py` → one-time script to train and export the model
-* `docker-compose.yml` → local app + DB stack
-* `requirements.txt` → Python dependencies for the container
-* `trained_model/` → saved model, scaler, and training visualizations
-* `terraform/` →  infrastructure as code for AWS (EC2, RDS, IAM, etc.)
-* `terraform/modules/` → reusable Terraform modules: compute, database, storage
-* `terraform/variables.tf` → variable declarations
-* `terraform/terraform.tfvars` → environment-specific values
+* `api/app/` → main FastAPI application
+* `api/.env.local` → environment variables for local development
+* `api/Dockerfile` → container definition
+* `api/train_model.py` → script to train model and save artifacts
+* `api/upload_to_s3.py` → utility script for pushing model/scaler to S3
+* `docker-compose.yml` → local development stack
+* `helm/` → Kubernetes deployment defined as a Helm chart (deployment, service, ingress, values)
+* `trained_model/` → model, scaler, and visualization artifacts
+* `terraform/` → full infrastructure as code
+* `terraform/modules/` → reusable Terraform modules
+* `terraform/variables.tf` → input variables
+* `terraform/terraform.tfvars` → environment values
 
 ## 🛠 Deployment Summary
 
-* ✅ Full deployment to AWS works out-of-the-box
-* ✅ EC2 instance runs Docker containerized API
-* ✅ Model + scaler pulled from S3 on boot
-* ✅ Logs go to RDS and CloudWatch
-* ✅ Code deployed via SCP through Terraform
-* ✅ SSH enabled (via `diabetes-key.pem`)
-
----
+* ✅ `terraform apply` = full working deployment (infra + app + ECR + Helm)
+* ✅ Model + scaler auto-loaded from S3
+* ✅ Deployed to Kubernetes in EKS
+* ✅ Accessible over internet via Ingress
+* ✅ Docker image built/pushed locally during deployment
+* ✅ No manual image tagging or Helm command needed
 
 ### 📊 Visualizations & Analysis
 

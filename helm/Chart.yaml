@@ -1,0 +1,5 @@
+apiVersion: v2
+name: diabetes-ml
+description: ML API for diabetes prediction using FastAPI and TensorFlow
+version: 0.1.0
+appVersion: "1.0"
