@@ -1,14 +1,16 @@
-import os
 import logging
+import os
 import time
-import boto3
-from psycopg2.pool import SimpleConnectionPool
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import List
+
+import boto3
 from app.config import Config
+from psycopg2.pool import SimpleConnectionPool
 
 logger = logging.getLogger("diabetes-ml")
+
 
 class DatabaseService:
     def __init__(self, config: Config):
@@ -24,7 +26,7 @@ class DatabaseService:
                 "port": self.config.db_port,
                 "sslmode": self.config.db_ssl_mode,
                 "connect_timeout": self.config.db_connect_timeout,
-                "application_name": "diabetes-ml-app"
+                "application_name": "diabetes-ml-app",
             }
 
             if self.config.db_iam_auth:
@@ -33,7 +35,7 @@ class DatabaseService:
                     DBHostname=self.config.db_host,
                     Port=self.config.db_port,
                     DBUsername=self.config.db_user,
-                    Region=os.getenv("AWS_REGION", "us-east-1")
+                    Region=os.getenv("AWS_REGION", "us-east-1"),
                 )
                 connect_params["user"] = self.config.db_user
                 connect_params["password"] = token
@@ -42,9 +44,7 @@ class DatabaseService:
                 connect_params["password"] = self.config.db_password
 
             self.pool = SimpleConnectionPool(
-                self.config.db_pool_min,
-                self.config.db_pool_max,
-                **connect_params
+                self.config.db_pool_min, self.config.db_pool_max, **connect_params
             )
 
             self._ensure_table_exists()
@@ -60,7 +60,8 @@ class DatabaseService:
         try:
             with self.get_connection() as conn:
                 with conn.cursor() as cur:
-                    cur.execute("""
+                    cur.execute(
+                        """
                         CREATE TABLE IF NOT EXISTS logs (
                             id SERIAL PRIMARY KEY,
                             timestamp TIMESTAMPTZ NOT NULL,
@@ -71,7 +72,8 @@ class DatabaseService:
                             status VARCHAR(20),
                             processing_time FLOAT
                         )
-                    """)
+                    """
+                    )
                     conn.commit()
                     logger.info("Verified that logs table exists")
         except Exception as e:
@@ -93,22 +95,29 @@ class DatabaseService:
         features: List[float],
         prediction: float,
         status: str,
-        processing_time: float
+        processing_time: float,
     ):
         # Log prediction results to the database
         try:
             with self.get_connection() as conn:
                 with conn.cursor() as cur:
-                    cur.execute("""
-                        INSERT INTO logs 
-                            (timestamp, request_id, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, 
+                    cur.execute(
+                        """
+                        INSERT INTO logs
+                            (timestamp, request_id, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10,
                              prediction, status, processing_time)
-                        VALUES 
+                        VALUES
                             (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        datetime.now(timezone.utc), request_id, *features,
-                        prediction, status, processing_time
-                    ))
+                    """,
+                        (
+                            datetime.now(timezone.utc),
+                            request_id,
+                            *features,
+                            prediction,
+                            status,
+                            processing_time,
+                        ),
+                    )
                     conn.commit()
         except Exception as e:
             logger.error(f"Failed to log prediction to database: {str(e)}")
@@ -124,14 +133,8 @@ class DatabaseService:
             response_time = time.time() - start_time
             logger.debug(f"Database responded in {response_time:.3f} seconds")
 
-            return {
-                "status": "ok",
-                "response_time_ms": round(response_time * 1000, 2)
-            }
+            return {"status": "ok", "response_time_ms": round(response_time * 1000, 2)}
 
         except Exception as e:
             logger.warning(f"Database connection check failed: {str(e)}")
-            return {
-                "status": "error",
-                "message": str(e)
-            }
+            return {"status": "error", "message": str(e)}

@@ -1,10 +1,11 @@
-import tensorflow as tf
-import numpy as np
+import pickle
+
 import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import pickle
 
 # === Load data ===
 data = load_diabetes()
@@ -18,57 +19,55 @@ scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 # === Train/test split with stratification ===
-X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled, y, test_size=0.2, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
 
 # === Improved Keras model with regularization ===
 def build_model(learning_rate=0.001):
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(64, input_shape=(X.shape[1],), 
-                             activation='relu',
-                             kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(0.3),
-        
-        tf.keras.layers.Dense(32, activation='relu',
-                             kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(0.3),
-        
-        tf.keras.layers.Dense(1)  # Regression output
-    ])
-    
+    model = tf.keras.Sequential(
+        [
+            tf.keras.layers.Dense(
+                64,
+                input_shape=(X.shape[1],),
+                activation='relu',
+                kernel_regularizer=tf.keras.regularizers.l2(0.001),
+            ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(
+                32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)
+            ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(1),  # Regression output
+        ]
+    )
+
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
     return model
 
+
 # === Early stopping callback ===
 early_stopping = tf.keras.callbacks.EarlyStopping(
-    monitor='val_loss',
-    patience=30,
-    restore_best_weights=True,
-    verbose=1
+    monitor='val_loss', patience=30, restore_best_weights=True, verbose=1
 )
 
 # === Reduce learning rate on plateau ===
 reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-    monitor='val_loss',
-    factor=0.5,
-    patience=10,
-    min_lr=0.00001,
-    verbose=1
+    monitor='val_loss', factor=0.5, patience=10, min_lr=0.00001, verbose=1
 )
 
 # === Model training ===
 model = build_model()
 history = model.fit(
-    X_train, y_train,
+    X_train,
+    y_train,
     epochs=300,
     batch_size=16,  # Smaller batch size for better generalization
     validation_split=0.2,  # Larger validation split
     callbacks=[early_stopping, reduce_lr],
-    verbose=1
+    verbose=1,
 )
 
 # === Evaluate model on test set ===

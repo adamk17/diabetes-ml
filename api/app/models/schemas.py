@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any
 import math
+from typing import Any, Dict
+
+from pydantic import BaseModel, Field, field_validator
+
 
 class InputData(BaseModel):
     x1: float = Field(..., description="Input feature 1")
@@ -24,14 +26,26 @@ class InputData(BaseModel):
             raise ValueError("Input features cannot be NaN or infinite.")
         return float(v)
 
+
 class PredictionResponse(BaseModel):
     prediction: float = Field(..., description="Predicted value from the model")
-    timestamp: str = Field(..., description="UTC timestamp when the prediction was made (ISO format)")
+    timestamp: str = Field(
+        ..., description="UTC timestamp when the prediction was made (ISO format)"
+    )
     request_id: str = Field(..., description="Unique identifier for the request")
 
+
 class HealthResponse(BaseModel):
-    status: str = Field(..., description="Overall health status of the application ('ok' or 'degraded')")
-    model_loaded: bool = Field(..., description="Indicates whether the ML model was loaded successfully")
-    scaler_loaded: bool = Field(..., description="Indicates whether the scaler was loaded successfully")
-    database: Dict[str, Any] = Field(..., description="Status and metrics related to the database connection")
+    status: str = Field(
+        ..., description="Overall health status of the application ('ok' or 'degraded')"
+    )
+    model_loaded: bool = Field(
+        ..., description="Indicates whether the ML model was loaded successfully"
+    )
+    scaler_loaded: bool = Field(
+        ..., description="Indicates whether the scaler was loaded successfully"
+    )
+    database: Dict[str, Any] = Field(
+        ..., description="Status and metrics related to the database connection"
+    )
     version: str = Field(..., description="API version currently running")

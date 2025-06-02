@@ -1,8 +1,10 @@
-import boto3
 import os
 import sys
-from dotenv import load_dotenv
+
+import boto3
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
+
 
 def main():
     try:
@@ -22,11 +24,11 @@ def main():
         if not bucket:
             print("Error: MODEL_BUCKET variable is not defined in .env file")
             return False
-            
+
         if not prefix:
             print("Warning: MODEL_PREFIX variable is not defined in .env file")
             prefix = "tf_model"  # Set default value only when not in .env
-            
+
         if not region:
             print("Warning: AWS_REGION variable is not defined in .env file")
             region = "eu-central-1"  # Set default value only when not in .env
@@ -38,9 +40,7 @@ def main():
         # Initialize AWS session
         try:
             session = boto3.session.Session(
-                aws_access_key_id=access_key,
-                aws_secret_access_key=secret_key,
-                region_name=region
+                aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region
             )
             s3 = session.client("s3")
         except Exception as e:
@@ -50,7 +50,7 @@ def main():
         # List of files to upload
         files_to_upload = [
             {"local_path": "./trained_model/tf_model.h5", "key": f"{prefix}/model.h5"},
-            {"local_path": "./trained_model/scaler.pkl", "key": f"{prefix}/scaler.pkl"}
+            {"local_path": "./trained_model/scaler.pkl", "key": f"{prefix}/scaler.pkl"},
         ]
 
         # Upload files
@@ -70,6 +70,7 @@ def main():
         print(f"Unexpected error: {str(e)}")
         return False
 
+
 def upload_file(s3_client, bucket, local_path, key):
     """
     Uploads a file to S3
@@ -83,7 +84,7 @@ def upload_file(s3_client, bucket, local_path, key):
 
         print(f"Uploading {local_path} → s3://{bucket}/{key}")
         s3_client.upload_file(local_path, bucket, key)
-        
+
         # Verify file was uploaded
         try:
             s3_client.head_object(Bucket=bucket, Key=key)
@@ -92,7 +93,7 @@ def upload_file(s3_client, bucket, local_path, key):
         except ClientError:
             print(f"❌ Could not verify if file {key} was uploaded")
             return False
-            
+
     except ClientError as e:
         print(f"AWS error while uploading {local_path}: {str(e)}")
         return False
@@ -100,7 +101,7 @@ def upload_file(s3_client, bucket, local_path, key):
         print(f"Unexpected error while uploading {local_path}: {str(e)}")
         return False
 
+
 if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)
-    

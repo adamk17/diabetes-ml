@@ -1,13 +1,13 @@
+from contextlib import asynccontextmanager
+
+import uvicorn
+from app.api.endpoints import router
+from app.config import Config
+from app.services.db_service import DatabaseService
+from app.services.model_service import ModelService
+from app.utils.loggings import setup_logging
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
-from contextlib import asynccontextmanager
-import uvicorn
-
-from app.config import Config
-from app.services.model_service import ModelService
-from app.services.db_service import DatabaseService
-from app.api.endpoints import router
-from app.utils.loggings import setup_logging
 
 # Load configuration and logger
 config = Config()
@@ -16,6 +16,7 @@ logger = setup_logging(config)
 # Initialize services
 model_service = ModelService(config)
 db_service = DatabaseService(config)
+
 
 # Define lifespan for startup and shutdown events
 @asynccontextmanager
@@ -36,12 +37,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error while releasing resources: {str(e)}")
 
+
 # Initialize FastAPI app with lifespan
 app = FastAPI(
     title="Diabetes-ml",
     version=config.version,
     description="API for executing predictions based on a trained ML model",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Include API router

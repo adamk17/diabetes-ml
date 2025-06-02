@@ -1,14 +1,16 @@
-import os
-import tempfile
-import boto3
-import pickle
-import tensorflow as tf
-import numpy as np
 import logging
+import os
+import pickle
+import tempfile
 from functools import lru_cache
+
+import boto3
+import numpy as np
+import tensorflow as tf
 from app.config import Config
 
-logger = logging.getLogger('diabetes-ml')
+logger = logging.getLogger("diabetes-ml")
+
 
 class ModelService:
     def __init__(self, config: Config):
@@ -16,7 +18,7 @@ class ModelService:
         self.model = None
         self.scaler = None
         self.tempdir = tempfile.mkdtemp()
-        
+
         if self.config.use_iam_auth:
             # Use IAM for S3 authentication
             self.s3 = boto3.client("s3")
@@ -26,9 +28,9 @@ class ModelService:
                 "s3",
                 aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
                 aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-                region_name=os.getenv("AWS_REGION")
+                region_name=os.getenv("AWS_REGION"),
             )
-        
+
     def initialize(self) -> bool:
         # Model and scaler initialization
         try:
@@ -45,19 +47,25 @@ class ModelService:
         except Exception as e:
             logger.error(f"Error during model initialization: {str(e)}")
             raise
-            
+
     def _download_model(self):
         # Download model and scaler from S3
         try:
-            logger.info(f"Downloading model from S3: {self.config.model_bucket}/{self.config.model_prefix}")
+            logger.info(
+                f"Downloading model from S3: {self.config.model_bucket}/{self.config.model_prefix}"
+            )
             paginator = self.s3.get_paginator("list_objects_v2")
-            
+
             found_any = False
-            for page in paginator.paginate(Bucket=self.config.model_bucket, Prefix=self.config.model_prefix):
+            for page in paginator.paginate(
+                Bucket=self.config.model_bucket, Prefix=self.config.model_prefix
+            ):
                 for obj in page.get("Contents", []):
                     found_any = True
                     key = obj["Key"]
-                    target = os.path.join(self.tempdir, key.replace(self.config.model_prefix + "/", ""))
+                    target = os.path.join(
+                        self.tempdir, key.replace(self.config.model_prefix + "/", "")
+                    )
                     os.makedirs(os.path.dirname(target), exist_ok=True)
                     self.s3.download_file(self.config.model_bucket, key, target)
                     logger.debug(f"Downloaded {key} -> {target}")
@@ -72,15 +80,16 @@ class ModelService:
         # Making prediction with cache
         if not self.model or not self.scaler:
             raise ValueError("Model is not initialized")
-            
+
         features = np.array([feature_tuple])
         scaled = self.scaler.transform(features)
         return float(self.model.predict(scaled)[0][0])
-            
+
     def cleanup(self):
         # Cleaning resources
         if os.path.exists(self.tempdir):
             import shutil
+
             try:
                 shutil.rmtree(self.tempdir)
             except Exception as e:

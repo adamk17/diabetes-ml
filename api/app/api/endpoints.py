@@ -1,35 +1,31 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.responses import JSONResponse
-from datetime import datetime, timezone
 import logging
+from datetime import datetime, timezone
 
-from app.models.schemas import InputData, PredictionResponse, HealthResponse
-from app.api.dependencies import (
-    get_model_service,
-    get_db_service,
-    get_request_id,
-    get_config
-)
-from app.services.model_service import ModelService
-from app.services.db_service import DatabaseService
+from app.api.dependencies import get_config, get_db_service, get_model_service, get_request_id
 from app.config import Config
+from app.models.schemas import HealthResponse, InputData, PredictionResponse
+from app.services.db_service import DatabaseService
+from app.services.model_service import ModelService
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger("diabetes_ml")
 
 router = APIRouter()
+
 
 @router.post(
     "/predict",
     response_model=PredictionResponse,
     summary="Run diabetes prediction",
     description="""
-Run prediction based on 10 input features.  
+Run prediction based on 10 input features.
 Returns a float value representing diabetes disease progression.
 
-All prediction data is logged to a PostgreSQL database  
+All prediction data is logged to a PostgreSQL database
 along with a timestamp, unique request ID, and model response time.
 """,
-    tags=["Model"]
+    tags=["Model"],
 )
 async def predict(
     data: InputData,
@@ -51,13 +47,13 @@ async def predict(
             features=features,
             prediction=prediction,
             status="ok",
-            processing_time=processing_time
+            processing_time=processing_time,
         )
 
         return {
             "prediction": prediction,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "request_id": request_id
+            "request_id": request_id,
         }
 
     except Exception as e:
@@ -69,13 +65,11 @@ async def predict(
             features=features,
             prediction=-1,
             status=f"error: {str(e)}",
-            processing_time=processing_time
+            processing_time=processing_time,
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Prediction failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
 
 @router.get(
     "/health",
@@ -89,12 +83,12 @@ Checks the health of key system components:
 
 Returns current system status and API version.
 """,
-    tags=["Monitoring"]
+    tags=["Monitoring"],
 )
 async def health_check(
     model_service: ModelService = Depends(get_model_service),
     db_service: DatabaseService = Depends(get_db_service),
-    config: Config = Depends(get_config)
+    config: Config = Depends(get_config),
 ):
     # Health check endpoint for monitoring the app status
     model_loaded = model_service.model is not None
@@ -113,13 +107,10 @@ async def health_check(
         "model_loaded": model_loaded,
         "scaler_loaded": scaler_loaded,
         "database": db_status,
-        "version": config.version
+        "version": config.version,
     }
 
     if overall_status != "ok":
-        return JSONResponse(
-            status_code=response_status_code,
-            content=health_response
-        )
+        return JSONResponse(status_code=response_status_code, content=health_response)
 
     return health_response
