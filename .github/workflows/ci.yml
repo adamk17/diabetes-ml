@@ -57,7 +57,7 @@ jobs:
         terraform_version: '~1.11'
     
     - name: Terraform Format Check
-      run: terraform -chdir=terraform fmt -check
+      run: terraform -chdir=terraform fmt -recursive -check
     
     - name: Terraform Init
       run: terraform -chdir=terraform init

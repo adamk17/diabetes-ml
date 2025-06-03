@@ -104,16 +104,16 @@ resource "aws_eks_node_group" "this" {
   node_role_arn   = aws_iam_role.node_role.arn
   subnet_ids      = var.subnet_ids
   instance_types  = [var.node_instance_type]
-  
+
   scaling_config {
     desired_size = var.desired_capacity
     max_size     = var.max_size
     min_size     = var.min_size
   }
 
-  ami_type       = var.ami_type
-  capacity_type  = var.capacity_type
-  disk_size      = var.disk_size
+  ami_type      = var.ami_type
+  capacity_type = var.capacity_type
+  disk_size     = var.disk_size
 
   dynamic "taint" {
     for_each = var.node_taints

@@ -38,7 +38,7 @@ output "eks_node_groups" {
 
 output "ingress_nginx_service_hostname" {
   description = "Hostname of the ingress-nginx LoadBalancer"
-  value       = try(
+  value = try(
     data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].hostname,
     null
   )
@@ -46,7 +46,7 @@ output "ingress_nginx_service_hostname" {
 
 output "ingress_nginx_service_ip" {
   description = "External IP of the ingress-nginx LoadBalancer"
-  value       = try(
+  value = try(
     data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].ip,
     null
   )

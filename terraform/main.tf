@@ -8,15 +8,15 @@ data "aws_caller_identity" "current" {}
 module "vpc" {
   source = "./modules/vpc"
 
-  project_name           = var.project_name
-  environment            = var.environment
-  vpc_cidr               = var.vpc_cidr
-  public_subnet_cidrs    = var.public_subnet_cidrs
-  private_subnet_cidrs   = var.private_subnet_cidrs
-  availability_zones     = var.availability_zones
-  create_nat_gateway     = var.create_nat_gateway
-  additional_tags        = var.additional_tags
-  allowed_cidr_blocks    = var.allowed_cidr_blocks
+  project_name         = var.project_name
+  environment          = var.environment
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  availability_zones   = var.availability_zones
+  create_nat_gateway   = var.create_nat_gateway
+  additional_tags      = var.additional_tags
+  allowed_cidr_blocks  = var.allowed_cidr_blocks
 }
 
 # Storage (S3)
@@ -48,28 +48,28 @@ module "database" {
 module "eks" {
   source = "./modules/eks"
 
-  project_name                = var.project_name
-  environment                 = var.environment
-  cluster_name                = var.cluster_name
-  cluster_version             = var.cluster_version
-  vpc_id                      = module.vpc.vpc_id
-  subnet_ids                  = module.vpc.private_subnet_ids
-  cluster_security_group_ids  = []
-  node_instance_type          = var.node_instance_type
-  desired_capacity            = var.desired_capacity
-  min_size                    = var.min_size
-  max_size                    = var.max_size
-  ami_type                    = var.ami_type
-  capacity_type               = var.capacity_type
-  disk_size                   = var.disk_size
-  node_labels                 = var.node_labels
-  node_taints                 = var.node_taints
-  update_max_unavailable      = var.update_max_unavailable
-  enabled_cluster_log_types   = var.enabled_cluster_log_types
-  endpoint_private_access     = var.endpoint_private_access
-  endpoint_public_access      = var.endpoint_public_access
-  additional_node_groups      = var.additional_node_groups
-  additional_tags             = var.additional_tags
+  project_name               = var.project_name
+  environment                = var.environment
+  cluster_name               = var.cluster_name
+  cluster_version            = var.cluster_version
+  vpc_id                     = module.vpc.vpc_id
+  subnet_ids                 = module.vpc.private_subnet_ids
+  cluster_security_group_ids = []
+  node_instance_type         = var.node_instance_type
+  desired_capacity           = var.desired_capacity
+  min_size                   = var.min_size
+  max_size                   = var.max_size
+  ami_type                   = var.ami_type
+  capacity_type              = var.capacity_type
+  disk_size                  = var.disk_size
+  node_labels                = var.node_labels
+  node_taints                = var.node_taints
+  update_max_unavailable     = var.update_max_unavailable
+  enabled_cluster_log_types  = var.enabled_cluster_log_types
+  endpoint_private_access    = var.endpoint_private_access
+  endpoint_public_access     = var.endpoint_public_access
+  additional_node_groups     = var.additional_node_groups
+  additional_tags            = var.additional_tags
 }
 
 # EKS Authentication
@@ -150,8 +150,8 @@ resource "aws_ecr_repository" "diabetes_ml" {
 
 # Kubernetes Secrets
 resource "kubernetes_secret" "app" {
-  provider    = kubernetes.eks
-  depends_on  = [null_resource.update_kubeconfig]
+  provider   = kubernetes.eks
+  depends_on = [null_resource.update_kubeconfig]
 
   metadata {
     name = "diabetes-ml-secret"
@@ -172,20 +172,20 @@ resource "kubernetes_secret" "app" {
 
 # ConfigMap
 resource "kubernetes_config_map" "app" {
-  provider    = kubernetes.eks
-  depends_on  = [null_resource.update_kubeconfig]
+  provider   = kubernetes.eks
+  depends_on = [null_resource.update_kubeconfig]
 
   metadata {
     name = "diabetes-ml-config"
   }
 
   data = {
-    LOG_LEVEL     = "INFO"
-    MODEL_PATH    = "/app/tf_model.h5"
-    SCALER_PATH   = "/app/scaler.pkl"
-    S3_BUCKET     = var.model_bucket_name
-    MODEL_BUCKET  = var.model_bucket_name
-    AWS_REGION    = var.aws_region
+    LOG_LEVEL    = "INFO"
+    MODEL_PATH   = "/app/tf_model.h5"
+    SCALER_PATH  = "/app/scaler.pkl"
+    S3_BUCKET    = var.model_bucket_name
+    MODEL_BUCKET = var.model_bucket_name
+    AWS_REGION   = var.aws_region
   }
 }
 

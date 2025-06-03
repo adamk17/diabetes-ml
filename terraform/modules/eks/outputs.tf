@@ -46,15 +46,15 @@ output "kubeconfig_command" {
 output "node_groups" {
   value = {
     primary = {
-      name      = aws_eks_node_group.this.node_group_name
-      arn       = aws_eks_node_group.this.arn
-      status    = aws_eks_node_group.this.status
+      name   = aws_eks_node_group.this.node_group_name
+      arn    = aws_eks_node_group.this.arn
+      status = aws_eks_node_group.this.status
     }
     additional = [
       for ng in aws_eks_node_group.additional : {
-        name      = ng.node_group_name
-        arn       = ng.arn
-        status    = ng.status
+        name   = ng.node_group_name
+        arn    = ng.arn
+        status = ng.status
       }
     ]
   }

@@ -97,12 +97,12 @@ variable "disk_size" {
 
 variable "node_taints" {
   description = "List of taints for the EKS Node Group"
-  type        = list(object({
+  type = list(object({
     key    = string
     value  = string
     effect = string
   }))
-  default     = []
+  default = []
 }
 
 variable "node_labels" {
@@ -119,15 +119,15 @@ variable "update_max_unavailable" {
 
 variable "additional_node_groups" {
   description = "List of additional node groups to create"
-  type        = list(object({
-    name            = string
-    instance_types  = list(string)
+  type = list(object({
+    name             = string
+    instance_types   = list(string)
     desired_capacity = number
-    min_size        = number
-    max_size        = number
-    labels          = map(string)
+    min_size         = number
+    max_size         = number
+    labels           = map(string)
   }))
-  default     = []
+  default = []
 }
 
 variable "additional_tags" {

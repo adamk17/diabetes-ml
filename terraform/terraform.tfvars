@@ -1,19 +1,19 @@
-aws_region         = "eu-central-1"
-environment        = "dev"
-project_name       = "diabetes-ml"
+aws_region   = "eu-central-1"
+environment  = "dev"
+project_name = "diabetes-ml"
 
 # S3
-model_bucket_name  = "your-bucket-name"
+model_bucket_name     = "your-bucket-name"
 aws_access_key_id     = "your-access-key-id"
 aws_secret_access_key = "your-secret-access-key"
 
 # RDS
-db_identifier = "your-db-identifier"
-db_instance_class  = "db.t4g.micro"
+db_identifier        = "your-db-identifier"
+db_instance_class    = "db.t4g.micro"
 db_allocated_storage = 10
-db_name            = "your-db-name"
-db_username        = "your-db-user"
-db_password        = "your-db-password" 
+db_name              = "your-db-name"
+db_username          = "your-db-user"
+db_password          = "your-db-password"
 
 allowed_cidr_blocks = ["0.0.0.0/0"] # Should be your IP
 
@@ -27,16 +27,16 @@ create_nat_gateway   = true
 additional_tags = {}
 
 # EKS
-cluster_name           = "your-cluster-name"
-cluster_version        = "1.29"
+cluster_name    = "your-cluster-name"
+cluster_version = "1.29"
 
-node_instance_type     = "t3.medium"
-desired_capacity       = 2
-min_size               = 1
-max_size               = 3
-ami_type               = "AL2_x86_64"
-capacity_type          = "ON_DEMAND"
-disk_size              = 20
+node_instance_type = "t3.medium"
+desired_capacity   = 2
+min_size           = 1
+max_size           = 3
+ami_type           = "AL2_x86_64"
+capacity_type      = "ON_DEMAND"
+disk_size          = 20
 
 node_labels = {
   role = "ml-api"
